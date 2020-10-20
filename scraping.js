@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 const fs = require('fs')
 const path = require('path')
 
-axios.get('https://yts.mx/browse-movies?page=1')
+axios.get('https://yts.mx/browse-movies?page=2')
     .then(res => {
         const movies = [];
         const $ = cheerio.load(res.data);
@@ -93,7 +93,7 @@ async function downloadImage(moviePoster, title) {
     let url = moviePoster;
     title = title.toLowerCase();
     let moviePosterName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "") + Math.floor((Math.random() * 100) + 1);
-    let imagefile = path.resolve(__dirname, 'images', `${moviePosterName}.${moviePosterExtension}`);
+    let imagefile = path.resolve(__dirname, '../public/uploads/images', `${moviePosterName}.${moviePosterExtension}`);
     let writerImg = fs.createWriteStream(imagefile);
     try {
         const response = await axios({
@@ -105,7 +105,7 @@ async function downloadImage(moviePoster, title) {
         }).catch(err => {
             moviePosterName = 'defaultImage';
         });
-        return moviePosterName;
+        return `${moviePosterName}.${moviePosterExtension}`;
     }
     catch (err) {
         console.log(err);
@@ -125,7 +125,7 @@ async function downloadTorrentFiles(movieTorrent, title, moviesDateFormat) {
             let torrentLabelFile = torrentLabel.replace(/\s|\W|[#$%^&*()]/g, "_");
             let movieTorrentName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "_");
             let movieTorrentNameModified = `${movieTorrentName}_${torrentLabelFile}_${moviesDateFormat}_` + Math.floor((Math.random() * 100) + 1);
-            let torrentfilePath = path.resolve(__dirname, 'torrentsfiles', `${movieTorrentNameModified}.${movieTorrentExtension}`);
+            let torrentfilePath = path.resolve(__dirname, '../public/uploads/torrentsfiles', `${movieTorrentNameModified}.${movieTorrentExtension}`);
             let torrentFileFinalPath = fs.createWriteStream(torrentfilePath);
             const response = await axios({
                 url,
@@ -145,45 +145,38 @@ async function downloadTorrentFiles(movieTorrent, title, moviesDateFormat) {
 }
 
 async function insertMovieData(imageName, content, title, movieTrailerID, moviesDateFormat, moviesInsertCats, torrentArrObjCooked) {
-    const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3RcL3RvcnJlbnQiLCJpYXQiOjE2MDAwOTczMDUsIm5iZiI6MTYwMDA5NzMwNSwiZXhwIjoxNjAwNzAyMTA1LCJkYXRhIjp7InVzZXIiOnsiaWQiOiIxIn19fQ.b14xkBV49CKzi1oDHefysngctXMjSoyXVngeQZny2yk";
-    const submitPost = await axios.post('http://localhost/torrent/wp-json/wp/v2/movies', {
+    let moviesInsertCatIntoArr = moviesInsertCats.split(',');
+    let showData = {
         'title': title,
-        'content': content,
-        'status': 'publish',
-        'genre': moviesInsertCats,
-    }, {
+        'description': content,
+        'poster': imageName,
+        'publish': true,
+        'categories': moviesInsertCatIntoArr,
+        'trailer': movieTrailerID,
+        'date': moviesDateFormat,
+        'torrentData': torrentArrObjCooked,
+    }
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmNzBkNzcyMTAzNTk1NDU1ODNiYWViZCIsImlhdCI6MTYwMjAwMTc2MywiZXhwIjoxNjA0NTkzNzYzfQ.7B9pHkSGoGkQHRqOoUYpfVVguga5LpRzU_eXoCwZ-FI";
+    const submitPost = await axios.post('http://localhost:1337/movies', showData, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
     });
-    let postId = submitPost.data.id;
-    const submitPostWithCustomFields = await axios.post(`http://localhost/torrent/wp-json/acf/v3/movies/${postId}`, null, {
-        params: {
-            'fields[movie_trailer]': movieTrailerID,
-            'fields[movie_poster]': `${imageName}.jpg`,
-            'fields[torrent_data]': torrentArrObjCooked,
-            'fields[movie_date]': moviesDateFormat
-        },
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    })
 }
 
 async function getAllCategories(allCat) {
     var allCategoriesinWP = new Map();
     let catsArr = [];
-    await axios.get('http://localhost/torrent/wp-json/wp/v2/genre?per_page=100')
+    await axios.get('http://localhost:1337/categories')
         .then(res => {
             for (catdIDandName in res.data) {
-                allCategoriesinWP.set(res.data[catdIDandName].slug, res.data[catdIDandName].id);
+                allCategoriesinWP.set(res.data[catdIDandName].category, res.data[catdIDandName].id);
             }
         }).then(() => {
             for (catIndex in allCat) {
                 let smallCat = allCat[catIndex].toLowerCase().replace(/\s/g, '');
                 if (allCategoriesinWP.get(smallCat)) {
-                    catsArr.push(allCategoriesinWP.get(smallCat));
+                    catsArr.push(`${allCategoriesinWP.get(smallCat)}`);
                 };
             }
         });
