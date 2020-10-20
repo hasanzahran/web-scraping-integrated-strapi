@@ -20,63 +20,64 @@ const insideLinks = async (links) => {
     let reviews = [];
     let screenshotimgs = [];
     let i = 0;
-    //for (a of links) {
-    let pagesLink = links;
-    await axios.get(pagesLink[1])
-        .then(res => {
-            torrentAllInfo = [];
-            reviews = [];
-            screenshotimgs = [];
-            const $pageData = cheerio.load(res.data);
-            const title = $pageData('#movie-info .hidden-xs h1').html();
-            const moviesDate = $pageData('#movie-info .hidden-xs').children('h2').html();
-            const categories = $pageData('#movie-info .hidden-xs').children('h2:nth-child(3)').html();
-            const content = $pageData('#synopsis .hidden-xs').html();
-            const moviePoster = $pageData('#movie-poster .img-responsive').attr('src');
-            $pageData('.rating-row span:nth-child(2)').each((i, el) => {
-                reviews.push($pageData(el).html());
-            });
-            $pageData('#movie-info .hidden-sm a').each((index, element) => {
-                let torrentFile = $pageData(element).attr('href');
-                let torrentTitle = $pageData(element).attr('title');
-                let torrentLabel = $pageData(element).html();
-                let torrentObj = {
-                    torrentFile,
-                    torrentTitle,
-                    torrentLabel
+    for (a of links) {
+        let pagesLink = a;
+        await axios.get(pagesLink)
+            .then(res => {
+                torrentAllInfo = [];
+                reviews = [];
+                screenshotimgs = [];
+                const $pageData = cheerio.load(res.data);
+                const title = $pageData('#movie-info .hidden-xs h1').html();
+                const moviesDate = $pageData('#movie-info .hidden-xs').children('h2').html();
+                const categories = $pageData('#movie-info .hidden-xs').children('h2:nth-child(3)').html();
+                const content = $pageData('#synopsis .hidden-xs').html();
+                const moviePoster = $pageData('#movie-poster .img-responsive').attr('src');
+                $pageData('.rating-row span:nth-child(2)').each((i, el) => {
+                    reviews.push($pageData(el).html());
+                });
+                $pageData('#movie-info .hidden-sm a').each((index, element) => {
+                    let torrentFile = $pageData(element).attr('href');
+                    let torrentTitle = $pageData(element).attr('title');
+                    let torrentLabel = $pageData(element).html();
+                    let torrentObj = {
+                        torrentFile,
+                        torrentTitle,
+                        torrentLabel
+                    }
+                    torrentAllInfo.push(torrentObj);
+                });
+                $pageData('#screenshots .screenshot .screenshot-group img').each((index, element) => {
+                    let screenshot = $pageData(element).attr('src');
+                    screenshotimgs.push(screenshot);
+                });
+                let url = $pageData('#playTrailer').attr('href');
+                let movieTrailerID;
+                url = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+                if (url[2] !== undefined) {
+                    movieTrailerID = url[2].split(/[^0-9a-z_\-]/i);
+                    movieTrailerID = movieTrailerID[0];
                 }
-                torrentAllInfo.push(torrentObj);
+                else {
+                    movieTrailerID = 'eDtksqj0v9k';
+                }
+                let moviesDateFormat = moviesDate.split(" ");
+                let categoriesArr = categories.split("/");
+                allMoviesContent.push({
+                    title,
+                    content,
+                    moviePoster,
+                    movieTrailerID,
+                    moviesDateFormat: moviesDateFormat[0],
+                    categoriesArr,
+                    torrentAllInfo,
+                    reviews,
+                    screenshotimgs
+                });
             });
-            $pageData('#screenshots .screenshot .screenshot-group img').each((index, element) => {
-                let screenshot = $pageData(element).attr('src');
-                screenshotimgs.push(screenshot);
-            });
-            let url = $pageData('#playTrailer').attr('href');
-            let movieTrailerID;
-            url = url.replace(/(>|<)/gi, '').split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
-            if (url[2] !== undefined) {
-                movieTrailerID = url[2].split(/[^0-9a-z_\-]/i);
-                movieTrailerID = movieTrailerID[0];
-            }
-            else {
-                movieTrailerID = 'eDtksqj0v9k';
-            }
-            let moviesDateFormat = moviesDate.split(" ");
-            let categoriesArr = categories.split("/");
-            allMoviesContent.push({
-                title,
-                content,
-                moviePoster,
-                movieTrailerID,
-                moviesDateFormat: moviesDateFormat[0],
-                categoriesArr,
-                torrentAllInfo,
-                reviews,
-                screenshotimgs
-            });
-        });
-    i++;
-    //}
+        i++;
+        console.log(i);
+    }
     insertData(allMoviesContent);
 }
 
@@ -127,11 +128,9 @@ async function downloadScreenshotimgs(screenshotimages, title) {
             let imgObj = {
                 imageName: `${screenshotName}.${screenshotNameExtension}`
             }
-            console.log(imgObj);
             screenshotimgs.push(imgObj);
         }
     }
-    //console.log(screenshotimgs);
     return JSON.stringify(screenshotimgs);
 }
 
@@ -205,15 +204,14 @@ async function insertMovieData(imageName, content, title, movieTrailerID, movies
         'critics': reviews[1],
         'audience': reviews[2],
         'imdb': reviews[3],
-        'Screenshotimgs': screenshotimgs
+        'screenshotimgs': screenshotimgs
     }
-    console.log(showData);
-    // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmNzBkNzcyMTAzNTk1NDU1ODNiYWViZCIsImlhdCI6MTYwMjAwMTc2MywiZXhwIjoxNjA0NTkzNzYzfQ.7B9pHkSGoGkQHRqOoUYpfVVguga5LpRzU_eXoCwZ-FI";
-    // const submitPost = await axios.post('http://localhost:1337/movies', showData, {
-    //     headers: {
-    //         'Authorization': `Bearer ${token}`
-    //     }
-    // });
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmNzBkNzcyMTAzNTk1NDU1ODNiYWViZCIsImlhdCI6MTYwMjAwMTc2MywiZXhwIjoxNjA0NTkzNzYzfQ.7B9pHkSGoGkQHRqOoUYpfVVguga5LpRzU_eXoCwZ-FI";
+    const submitPost = await axios.post('http://localhost:1337/movies', showData, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
 }
 
 async function getAllCategories(allCat) {
