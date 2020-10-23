@@ -216,6 +216,7 @@ async function insertMovieData(imageName, content, title, movieTrailerID, movies
 
 async function getAllCategories(allCat) {
     var allCategoriesinWP = new Map();
+    let catAll = '5f9331e1b7c7481fdc87e4e0';
     let catsArr = [];
     await axios.get('http://localhost:1337/categories')
         .then(res => {
@@ -229,6 +230,8 @@ async function getAllCategories(allCat) {
                     catsArr.push(`${allCategoriesinWP.get(smallCat)}`);
                 };
             }
+        }).then(() => {
+            catsArr.push(catAll);
         });
     return catsArr.toString();
 }
