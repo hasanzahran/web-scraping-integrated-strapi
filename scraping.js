@@ -1,9 +1,16 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
 
-axios.get('https://yts.mx/browse-movies?page=2')
+let filename = `${new Date().getFullYear()}_${new Date().getDate()}_${new Date().getMonth() + 1}_${new Date().getHours() + 1}`;
+fs.mkdirSync(path.resolve(__dirname, `../public/uploads/images/${filename}`));
+fs.mkdirSync(path.resolve(__dirname, `../public/uploads/screenshotimgs/${filename}`));
+fs.mkdirSync(path.resolve(__dirname, `../public/uploads/torrentsfiles/${filename}`));
+
+console.log(filename);
+
+axios.get('https://yts.mx/browse-movies?page=1')
     .then(res => {
         const movies = [];
         const $ = cheerio.load(res.data);
@@ -114,7 +121,7 @@ async function downloadScreenshotimgs(screenshotimages, title) {
             let url = screenshotimages[img];
             title = title.toLowerCase();
             let screenshotName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "") + Math.floor((Math.random() * 100) + 1);
-            let imagefile = path.resolve(__dirname, '../public/uploads/screenshotimgs', `${screenshotName}.${screenshotNameExtension}`);
+            let imagefile = path.resolve(__dirname, `../public/uploads/screenshotimgs/${filename}`, `${screenshotName}.${screenshotNameExtension}`);
             let writerImg = fs.createWriteStream(imagefile);
             const response = await axios({
                 url,
@@ -126,7 +133,7 @@ async function downloadScreenshotimgs(screenshotimages, title) {
                 moviePosterName = 'defaultImage';
             });
             let imgObj = {
-                imageName: `${screenshotName}.${screenshotNameExtension}`
+                imageName: `${filename}/${screenshotName}.${screenshotNameExtension}`
             }
             screenshotimgs.push(imgObj);
         }
@@ -139,7 +146,7 @@ async function downloadImage(moviePoster, title) {
     let url = moviePoster;
     title = title.toLowerCase();
     let moviePosterName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "") + Math.floor((Math.random() * 100) + 1);
-    let imagefile = path.resolve(__dirname, '../public/uploads/images', `${moviePosterName}.${moviePosterExtension}`);
+    let imagefile = path.resolve(__dirname, `../public/uploads/images/${filename}`, `${moviePosterName}.${moviePosterExtension}`);
     let writerImg = fs.createWriteStream(imagefile);
     try {
         const response = await axios({
@@ -151,7 +158,7 @@ async function downloadImage(moviePoster, title) {
         }).catch(err => {
             moviePosterName = 'defaultImage';
         });
-        return `${moviePosterName}.${moviePosterExtension}`;
+        return `${filename}/${moviePosterName}.${moviePosterExtension}`;
     }
     catch (err) {
         console.log(err);
@@ -171,7 +178,7 @@ async function downloadTorrentFiles(movieTorrent, title, moviesDateFormat) {
             let torrentLabelFile = torrentLabel.replace(/\s|\W|[#$%^&*()]/g, "_");
             let movieTorrentName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "_");
             let movieTorrentNameModified = `${movieTorrentName}_${torrentLabelFile}_${moviesDateFormat}_` + Math.floor((Math.random() * 100) + 1);
-            let torrentfilePath = path.resolve(__dirname, '../public/uploads/torrentsfiles', `${movieTorrentNameModified}.${movieTorrentExtension}`);
+            let torrentfilePath = path.resolve(__dirname, `../public/uploads/torrentsfiles/${filename}`, `${movieTorrentNameModified}.${movieTorrentExtension}`);
             let torrentFileFinalPath = fs.createWriteStream(torrentfilePath);
             const response = await axios({
                 url,
@@ -180,7 +187,7 @@ async function downloadTorrentFiles(movieTorrent, title, moviesDateFormat) {
             });
             response.data.pipe(torrentFileFinalPath);
             let torrentObj = {
-                movieTorrentFile: `${movieTorrentNameModified}.${movieTorrentExtension}`,
+                movieTorrentFile: `${filename}/${movieTorrentNameModified}.${movieTorrentExtension}`,
                 torrentTitle,
                 torrentLabel
             }
