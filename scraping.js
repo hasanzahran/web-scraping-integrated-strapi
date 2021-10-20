@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 const allCategoriesinWP = new Map();
-const urlCat = 'https://torrentula.me/api/categories';
+const urlCat = '...';
 
 (async function getAllCategories() {
     try {
@@ -23,18 +23,18 @@ const urlCat = 'https://torrentula.me/api/categories';
     for (pageNum of getAllpages) {
 
         let filename = `${new Date().getFullYear()}_${new Date().getDate()}_${new Date().getMonth() + 1}_${new Date().getHours() + 1}`;
-        if (!fs.existsSync(path.resolve(__dirname, `../torrentula.me/public/uploads/images/${filename}`))) fs.mkdirSync(path.resolve(__dirname, `../torrentula.me/public/uploads/images/${filename}`));
-        if (!fs.existsSync(path.resolve(__dirname, `../torrentula.me/public/uploads/screenshotimgs/${filename}`))) fs.mkdirSync(path.resolve(__dirname, `../torrentula.me/public/uploads/screenshotimgs/${filename}`));
-        if (!fs.existsSync(path.resolve(__dirname, `../torrentula.me/public/uploads/torrentsfiles/${filename}`))) fs.mkdirSync(path.resolve(__dirname, `../torrentula.me/public/uploads/torrentsfiles/${filename}`));
+        if (!fs.existsSync(path.resolve(__dirname, `..`))) fs.mkdirSync(path.resolve(__dirname, `..`));
+        if (!fs.existsSync(path.resolve(__dirname, `..`))) fs.mkdirSync(path.resolve(__dirname, `..`));
+        if (!fs.existsSync(path.resolve(__dirname, `..`))) fs.mkdirSync(path.resolve(__dirname, `..`));
 
         console.log(filename);
 
-        let apiKey = '2a397c12ae052a12663b34b7bc6be8fb';
-        let url = `https://yts.mx/browse-movies?page=${pageNum}`;
-        let urlCat = 'https://torrentula.me/api/categories';
+        let apiKey = '';
+        let url = `...?page=${pageNum}`;
+        let urlCat = '';
 
-
-        axios.get(`http://api.scraperapi.com?api_key=${apiKey}&url=${url}`)
+        ///to avoid browser blocking
+        axios.get(`...?api_key=${apiKey}&url=${url}`)
             .then(res => {
                 const movies = [];
                 const $ = cheerio.load(res.data);
@@ -154,7 +154,7 @@ const urlCat = 'https://torrentula.me/api/categories';
                     let url = screenshotimages[img];
                     title = title.toLowerCase();
                     let screenshotName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "") + Math.floor((Math.random() * 100) + 1);
-                    let imagefile = path.resolve(__dirname, `../torrentula.me/public/uploads/screenshotimgs/${filename}`, `${screenshotName}.${screenshotNameExtension}`);
+                    let imagefile = path.resolve(__dirname, `../${filename}`, `${screenshotName}.${screenshotNameExtension}`);
                     let writerImg = fs.createWriteStream(imagefile);
                     const response = await axios({
                         url,
@@ -179,7 +179,7 @@ const urlCat = 'https://torrentula.me/api/categories';
             let url = moviePoster;
             title = title.toLowerCase();
             let moviePosterName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "") + Math.floor((Math.random() * 100) + 1);
-            let imagefile = path.resolve(__dirname, `../torrentula.me/public/uploads/images/${filename}`, `${moviePosterName}.${moviePosterExtension}`);
+            let imagefile = path.resolve(__dirname, `..${filename}`, `${moviePosterName}.${moviePosterExtension}`);
             let writerImg = fs.createWriteStream(imagefile);
             try {
                 const response = await axios({
@@ -211,7 +211,7 @@ const urlCat = 'https://torrentula.me/api/categories';
                     let torrentLabelFile = torrentLabel.replace(/\s|\W|[#$%^&*()]/g, "_");
                     let movieTorrentName = title.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "_");
                     let movieTorrentNameModified = `${movieTorrentName}_${torrentLabelFile}_${moviesDateFormat}_` + Math.floor((Math.random() * 100) + 1);
-                    let torrentfilePath = path.resolve(__dirname, `../torrentula.me/public/uploads/torrentsfiles/${filename}`, `${movieTorrentNameModified}.${movieTorrentExtension}`);
+                    let torrentfilePath = path.resolve(__dirname, `..${filename}`, `${movieTorrentNameModified}.${movieTorrentExtension}`);
                     let torrentFileFinalPath = fs.createWriteStream(torrentfilePath);
                     // const response = await axios({
                     //     url,
@@ -266,8 +266,7 @@ const urlCat = 'https://torrentula.me/api/categories';
                 'imdb': reviews[3],
                 'screenshotimgs': screenshotimgs
             }
-            //    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmNzBkNzcyMTAzNTk1NDU1ODNiYWViZCIsImlhdCI6MTYwMjAwMTc2MywiZXhwIjoxNjA0NTkzNzYzfQ.7B9pHkSGoGkQHRqOoUYpfVVguga5LpRzU_eXoCwZ-FI";
-            const submitPost = await axios.post('https://torrentula.me/api/movies', showData)
+            const submitPost = await axios.post('...', showData)
                 .then(res => console.log(res.data.title, '****inserted data****'))
                 .catch(err => {
                     console.log(err)
